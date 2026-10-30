@@ -60,6 +60,15 @@
             display: none !important;
         }
 
+        html,
+        body {
+            overflow-x: hidden;
+        }
+
+        .palco {
+            overflow: hidden;
+        }
+
         model-viewer {
             --deslocamento: 0;
             transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out, filter 0.6s ease-out;
@@ -145,21 +154,6 @@
             opacity: 0.85;
         }
 
-        .credito-modelo {
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-            color: rgba(255, 255, 255, 0.55);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 11px;
-            text-align: center;
-        }
-
-        .credito-modelo a {
-            color: inherit;
-        }
-
         .carregando {
             position: absolute;
             top: 50%;
@@ -214,7 +208,7 @@
     <h1 style="width: 100%; color: white; text-align: center; position: absolute; top: 26%; font-size: 50px;">
         SAMUEL ARAAG
     </h1>
-    <div>
+    <div class="palco">
         <model-viewer
             id="carro"
             style="width: 100%; height: 100vh;"
@@ -239,7 +233,6 @@
     </button>
 
     <p id="nomeCarro" class="nome-carro" aria-live="polite">CORVETTE STINGRAY · 1/2</p>
-    <p id="creditoModelo" class="credito-modelo"></p>
 
     <button id="apresentacao" class="apresentacao" type="button" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -267,29 +260,13 @@
         botao.addEventListener('click', () => apresentar(!carro.hasAttribute('auto-rotate')));
 
         const carros = [
-            { nome: 'Corvette Stingray', arquivo: './assets/source/corvette_stingray.glb', credito: null },
-            {
-                nome: 'Car Concept',
-                arquivo: './assets/source/car_concept.glb',
-                credito: { texto: 'Car Concept, Eric Chadwick / DGG, ', licenca: 'CC BY 4.0', link: 'https://creativecommons.org/licenses/by/4.0/' }
-            }
+            { nome: 'Corvette Stingray', arquivo: './assets/source/corvette_stingray.glb' },
+            { nome: 'Car Concept', arquivo: './assets/source/car_concept.glb' }
         ];
         const nomeCarro = document.getElementById('nomeCarro');
-        const creditoModelo = document.getElementById('creditoModelo');
         const carregando = document.getElementById('carregando');
         const DURACAO_TROCA = reduzirMovimento ? 0 : 420;
         let atual = 0;
-
-        function mostrarCredito(credito) {
-            creditoModelo.replaceChildren();
-            if (!credito) return;
-            const link = document.createElement('a');
-            link.href = credito.link;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.textContent = credito.licenca;
-            creditoModelo.append(credito.texto, link);
-        }
 
         let trocando = false;
 
@@ -320,7 +297,6 @@
                     carro.classList.remove('posicionando');
                     nomeCarro.textContent = `${destino.nome.toUpperCase()} · ${atual + 1}/${carros.length}`;
                     nomeCarro.classList.remove('trocando');
-                    mostrarCredito(destino.credito);
                     apresentar(apresentando);
                     setTimeout(() => { trocando = false; }, DURACAO_TROCA);
                 }, { once: true });
