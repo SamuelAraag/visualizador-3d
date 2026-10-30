@@ -300,7 +300,7 @@
                     apresentar(apresentando);
                     setTimeout(() => { trocando = false; }, DURACAO_TROCA);
                 }, { once: true });
-                carro.src = destino.arquivo;
+                carro.src = destino.preCarregado || destino.arquivo;
                 carro.alt = destino.nome;
             }, DURACAO_TROCA);
         }
@@ -323,7 +323,32 @@
 
         botao.addEventListener('click', () => clearTimeout(inicioAutomatico));
 
+        function quandoOcioso(acao) {
+            if ('requestIdleCallback' in window) requestIdleCallback(acao);
+            else setTimeout(acao, 200);
+        }
+
+        function preCarregarCarros() {
+            const fila = carros.slice(1);
+
+            const proximoDaFila = () => {
+                const item = fila.shift();
+                if (!item) return;
+                fetch(item.arquivo, { priority: 'low' })
+                    .then((resposta) => {
+                        if (!resposta.ok) throw new Error(resposta.statusText);
+                        return resposta.blob();
+                    })
+                    .then((arquivo) => { item.preCarregado = URL.createObjectURL(arquivo); })
+                    .catch(() => {})
+                    .finally(() => quandoOcioso(proximoDaFila));
+            };
+
+            quandoOcioso(proximoDaFila);
+        }
+
         carro.addEventListener('load', () => {
+            preCarregarCarros();
             if (reduzirMovimento) return;
             inicioAutomatico = setTimeout(() => apresentar(true), ESPERA_PARA_APRESENTAR);
         }, { once: true });
