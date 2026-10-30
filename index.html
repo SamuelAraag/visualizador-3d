@@ -92,7 +92,7 @@
         const texto = document.getElementById('apresentacaoTexto');
         const reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        carro.setAttribute('rotation-per-second', reduzirMovimento ? '-4deg' : '-10deg');
+        carro.setAttribute('rotation-per-second', reduzirMovimento ? '-3.6deg' : '-9deg');
 
         function apresentar(ligado) {
             carro.toggleAttribute('auto-rotate', ligado);
@@ -103,9 +103,21 @@
 
         botao.addEventListener('click', () => apresentar(!carro.hasAttribute('auto-rotate')));
 
+        const ESPERA_PARA_APRESENTAR = 3000;
+        let inicioAutomatico = null;
+
         carro.addEventListener('camera-change', (evento) => {
-            if (evento.detail.source === 'user-interaction' && carro.hasAttribute('auto-rotate')) apresentar(false);
+            if (evento.detail.source !== 'user-interaction') return;
+            clearTimeout(inicioAutomatico);
+            if (carro.hasAttribute('auto-rotate')) apresentar(false);
         });
+
+        botao.addEventListener('click', () => clearTimeout(inicioAutomatico));
+
+        carro.addEventListener('load', () => {
+            if (reduzirMovimento) return;
+            inicioAutomatico = setTimeout(() => apresentar(true), ESPERA_PARA_APRESENTAR);
+        }, { once: true });
     </script>
     
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
