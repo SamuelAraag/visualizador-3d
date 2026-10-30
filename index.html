@@ -92,7 +92,7 @@
         const texto = document.getElementById('apresentacaoTexto');
         const reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        carro.setAttribute('rotation-per-second', reduzirMovimento ? '4deg' : '10deg');
+        carro.setAttribute('rotation-per-second', reduzirMovimento ? '-4deg' : '-10deg');
 
         function apresentar(ligado) {
             carro.toggleAttribute('auto-rotate', ligado);
