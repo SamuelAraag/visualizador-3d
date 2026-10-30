@@ -270,6 +270,7 @@
         const nomeCarro = document.getElementById('nomeCarro');
         const carregando = document.getElementById('carregando');
         const DURACAO_TROCA = reduzirMovimento ? 0 : 420;
+        const ESPERA_CARREGANDO = 400;
         let atual = 0;
 
         let trocando = false;
@@ -286,8 +287,9 @@
             nomeCarro.classList.add('trocando');
 
             setTimeout(() => {
-                carregando.hidden = false;
+                const mostrarCarregando = setTimeout(() => { carregando.hidden = false; }, ESPERA_CARREGANDO);
                 carro.addEventListener('load', () => {
+                    clearTimeout(mostrarCarregando);
                     carregando.hidden = true;
                     carro.classList.remove('saindo');
                     carro.style.setProperty('--deslocamento', `${direcao * 60}vw`);
