@@ -10,7 +10,6 @@ Créditos dos modelos
 
 - Corvette Stingray: modelo original do projeto.
 - Car Concept: Eric Chadwick / Darmstadt Graphics Group, dos modelos de exemplo do Khronos glTF (https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
-- Fusca 71 Azul: Walter Araujo (https://sketchfab.com/3d-models/fusca-71-azul-voslkswagen-beatle-71-blue-dbd85663114a424689bc215d6bc8ad29), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 - Fiat 147: lael.eugenio (https://sketchfab.com/3d-models/fiat-147-6c643d284d144dcb8db46ab11285ec0b), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 - Fiat Uno 2001: B.M.A (https://sketchfab.com/3d-models/fiat-uno-2001-cf685e42e7b54f348f6d5c145f1175dc), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 - Escort XR3 1986: Ezo (https://sketchfab.com/3d-models/1986-ford-escort-xr3-69eb711566834234b5dfbde3c6d4ee0a), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
