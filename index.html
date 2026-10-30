@@ -56,10 +56,156 @@
             transform: rotate(90deg);
         }
 
+        [hidden] {
+            display: none !important;
+        }
+
+        model-viewer {
+            --deslocamento: 0;
+            transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease-out, filter 0.6s ease-out;
+        }
+
+        model-viewer.saindo {
+            opacity: 0;
+            filter: blur(6px);
+            transform: translateX(var(--deslocamento)) scale(0.92);
+            transition: transform 0.42s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.42s ease-in, filter 0.42s ease-in;
+        }
+
+        model-viewer.posicionando {
+            opacity: 0;
+            filter: blur(6px);
+            transform: translateX(var(--deslocamento)) scale(0.92);
+            transition: none;
+        }
+
+        .nome-carro {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .nome-carro.trocando {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        .seta {
+            position: absolute;
+            top: 50%;
+            z-index: 2;
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            color: white;
+            cursor: pointer;
+            transform: translateY(-50%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .seta:hover {
+            border-color: white;
+        }
+
+        .seta:active {
+            transform: translateY(-50%) scale(0.94);
+        }
+
+        .seta:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 4px;
+        }
+
+        .seta svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .seta--anterior {
+            left: max(16px, env(safe-area-inset-left, 0px));
+        }
+
+        .seta--proximo {
+            right: max(16px, env(safe-area-inset-right, 0px));
+        }
+
+        .nome-carro {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+            color: white;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-align: center;
+            opacity: 0.85;
+        }
+
+        .credito-modelo {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            color: rgba(255, 255, 255, 0.55);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .credito-modelo a {
+            color: inherit;
+        }
+
+        .carregando {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 13px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .carregando span {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: girar 0.8s linear infinite;
+        }
+
+        @keyframes girar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             .apresentacao,
-            .apresentacao svg {
+            .apresentacao svg,
+            model-viewer,
+            .seta,
+            .nome-carro {
                 transition: none;
+            }
+
+            model-viewer.saindo,
+            model-viewer.posicionando {
+                filter: none;
+                transform: none;
+            }
+
+            .carregando span {
+                animation: none;
             }
         }
     </style>
@@ -74,9 +220,26 @@
             style="width: 100%; height: 100vh;"
             src="./assets/source/corvette_stingray.glb"
             camera-controls
-            auto-rotate-delay="0">
+            auto-rotate-delay="0"
+            alt="Corvette Stingray">
         </model-viewer>
     </div>
+
+    <div id="carregando" class="carregando" hidden><span></span>Carregando carro</div>
+
+    <button id="anterior" class="seta seta--anterior" type="button" aria-label="Carro anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 6 9 12 15 18"></polyline>
+        </svg>
+    </button>
+    <button id="proximo" class="seta seta--proximo" type="button" aria-label="Próximo carro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="9 6 15 12 9 18"></polyline>
+        </svg>
+    </button>
+
+    <p id="nomeCarro" class="nome-carro" aria-live="polite">CORVETTE STINGRAY · 1/2</p>
+    <p id="creditoModelo" class="credito-modelo"></p>
 
     <button id="apresentacao" class="apresentacao" type="button" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -102,6 +265,76 @@
         }
 
         botao.addEventListener('click', () => apresentar(!carro.hasAttribute('auto-rotate')));
+
+        const carros = [
+            { nome: 'Corvette Stingray', arquivo: './assets/source/corvette_stingray.glb', credito: null },
+            {
+                nome: 'Car Concept',
+                arquivo: './assets/source/car_concept.glb',
+                credito: { texto: 'Car Concept, Eric Chadwick / DGG, ', licenca: 'CC BY 4.0', link: 'https://creativecommons.org/licenses/by/4.0/' }
+            }
+        ];
+        const nomeCarro = document.getElementById('nomeCarro');
+        const creditoModelo = document.getElementById('creditoModelo');
+        const carregando = document.getElementById('carregando');
+        const DURACAO_TROCA = reduzirMovimento ? 0 : 420;
+        let atual = 0;
+
+        function mostrarCredito(credito) {
+            creditoModelo.replaceChildren();
+            if (!credito) return;
+            const link = document.createElement('a');
+            link.href = credito.link;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = credito.licenca;
+            creditoModelo.append(credito.texto, link);
+        }
+
+        let trocando = false;
+
+        function trocar(direcao) {
+            if (trocando) return;
+            trocando = true;
+            const apresentando = carro.hasAttribute('auto-rotate');
+            atual = (atual + direcao + carros.length) % carros.length;
+            const destino = carros[atual];
+
+            carro.style.setProperty('--deslocamento', `${-direcao * 60}vw`);
+            carro.classList.add('saindo');
+            nomeCarro.classList.add('trocando');
+
+            setTimeout(() => {
+                carregando.hidden = false;
+                carro.addEventListener('load', () => {
+                    carregando.hidden = true;
+                    carro.classList.remove('saindo');
+                    carro.style.setProperty('--deslocamento', `${direcao * 60}vw`);
+                    carro.classList.add('posicionando');
+                    if (!reduzirMovimento) {
+                        carro.cameraOrbit = `${direcao * 50}deg 75deg 105%`;
+                        carro.jumpCameraToGoal();
+                        carro.cameraOrbit = '0deg 75deg 105%';
+                    }
+                    carro.getBoundingClientRect();
+                    carro.classList.remove('posicionando');
+                    nomeCarro.textContent = `${destino.nome.toUpperCase()} · ${atual + 1}/${carros.length}`;
+                    nomeCarro.classList.remove('trocando');
+                    mostrarCredito(destino.credito);
+                    apresentar(apresentando);
+                    setTimeout(() => { trocando = false; }, DURACAO_TROCA);
+                }, { once: true });
+                carro.src = destino.arquivo;
+                carro.alt = destino.nome;
+            }, DURACAO_TROCA);
+        }
+
+        document.getElementById('anterior').addEventListener('click', () => trocar(-1));
+        document.getElementById('proximo').addEventListener('click', () => trocar(1));
+        document.addEventListener('keydown', (evento) => {
+            if (evento.key === 'ArrowLeft') trocar(-1);
+            if (evento.key === 'ArrowRight') trocar(1);
+        });
 
         const ESPERA_PARA_APRESENTAR = 3000;
         let inicioAutomatico = null;
