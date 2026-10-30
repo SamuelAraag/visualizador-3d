@@ -8,6 +8,7 @@
     <title>Visualizador 3D</title>
     <style>
         .apresentacao {
+            white-space: nowrap;
             position: absolute;
             left: 50%;
             bottom: calc(32px + env(safe-area-inset-bottom, 0px));
@@ -202,6 +203,66 @@
                 animation: none;
             }
         }
+        body.modo-vento {
+            background: radial-gradient(ellipse at 50% 42%, #4a505a 0%, #2c3038 48%, #15171b 100%) !important;
+        }
+
+        body {
+            transition: background-color 0.6s ease;
+        }
+
+        h1 {
+            transition: opacity 0.5s ease;
+        }
+
+        body.modo-vento h1 {
+            opacity: 0;
+        }
+
+        .palco {
+            position: relative;
+        }
+
+        #fluxo {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        body.modo-vento #fluxo {
+            opacity: 1;
+        }
+
+        .apresentacao--vento {
+            white-space: nowrap;
+            bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .nome-carro {
+            bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .aviso-vento {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            margin: 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 11px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        body.modo-vento .aviso-vento {
+            opacity: 1;
+        }
     </style>
 </head>
 <body style="background-color: black; margin: 0; font-family: 'azonix';">
@@ -215,8 +276,10 @@
             src="./assets/source/corvette_stingray.glb"
             camera-controls
             auto-rotate-delay="0"
+            max-camera-orbit="auto auto 300%"
             alt="Corvette Stingray">
         </model-viewer>
+        <canvas id="fluxo" aria-hidden="true"></canvas>
     </div>
 
     <div id="carregando" class="carregando" hidden><span></span>Carregando carro</div>
@@ -231,6 +294,17 @@
             <polyline points="9 6 15 12 9 18"></polyline>
         </svg>
     </button>
+
+    <button id="vento" class="apresentacao apresentacao--vento" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h11a3 3 0 1 0-3-3"></path>
+            <path d="M3 12h16a3 3 0 1 1-3 3"></path>
+            <path d="M3 16h8a3 3 0 1 1-3 3"></path>
+        </svg>
+        <span id="ventoTexto">Túnel de vento</span>
+    </button>
+
+    <p id="avisoVento" class="aviso-vento">Efeito visual, não é uma simulação aerodinâmica</p>
 
     <p id="nomeCarro" class="nome-carro" aria-live="polite">CORVETTE STINGRAY · 1/6</p>
 
@@ -282,6 +356,7 @@
             const destino = carros[atual];
 
             carro.style.setProperty('--deslocamento', `${-direcao * 60}vw`);
+            if (ventoLigado) limparFluxo();
             carro.classList.add('saindo');
             nomeCarro.classList.add('trocando');
 
@@ -292,7 +367,9 @@
                     carro.classList.remove('saindo');
                     carro.style.setProperty('--deslocamento', `${direcao * 60}vw`);
                     carro.classList.add('posicionando');
-                    if (!reduzirMovimento) {
+                    if (ventoLigado) {
+                        posicionarDeLado().then(desenharFluxo);
+                    } else if (!reduzirMovimento) {
                         carro.cameraOrbit = `${direcao * 50}deg 75deg 105%`;
                         carro.jumpCameraToGoal();
                         carro.cameraOrbit = '0deg 75deg 105%';
@@ -301,7 +378,7 @@
                     carro.classList.remove('posicionando');
                     nomeCarro.textContent = `${destino.nome.toUpperCase()} · ${atual + 1}/${carros.length}`;
                     nomeCarro.classList.remove('trocando');
-                    apresentar(apresentando);
+                    if (!ventoLigado) apresentar(apresentando);
                     setTimeout(() => { trocando = false; }, DURACAO_TROCA);
                 }, { once: true });
                 carro.src = destino.preCarregado || destino.arquivo;
@@ -326,6 +403,236 @@
         });
 
         botao.addEventListener('click', () => clearTimeout(inicioAutomatico));
+
+        const botaoVento = document.getElementById('vento');
+        const ventoTexto = document.getElementById('ventoTexto');
+        const tela = document.getElementById('fluxo');
+        const pincel = tela.getContext('2d');
+        const AMOSTRAS = 240;
+        let ventoLigado = false;
+        let linhas = [];
+        let camadaBase = null;
+        let quadro = 0;
+        let revelado = 0;
+        let inicioRevelar = 0;
+
+        function esperarQuadros(total) {
+            return new Promise((resolver) => {
+                const passo = (restante) => restante <= 0 ? resolver() : requestAnimationFrame(() => passo(restante - 1));
+                passo(total);
+            });
+        }
+
+        async function posicionarDeLado() {
+            carro.removeAttribute('auto-rotate');
+            carro.resetTurntableRotation(0);
+            carro.cameraOrbit = `90deg 88deg ${innerWidth < innerHeight ? 175 : 105}%`;
+            carro.jumpCameraToGoal();
+            await esperarQuadros(6);
+        }
+
+        async function medirContorno() {
+            const imagem = await createImageBitmap(await carro.toBlob({ mimeType: 'image/png' }));
+            const largura = AMOSTRAS;
+            const altura = Math.round(AMOSTRAS * imagem.height / imagem.width);
+            const apoio = document.createElement('canvas');
+            apoio.width = largura;
+            apoio.height = altura;
+            const contexto = apoio.getContext('2d', { willReadFrequently: true });
+            contexto.drawImage(imagem, 0, 0, largura, altura);
+            const pontos = contexto.getImageData(0, 0, largura, altura).data;
+            const topo = new Array(largura).fill(null);
+            const base = new Array(largura).fill(null);
+            for (let x = 0; x < largura; x++) {
+                for (let y = 0; y < altura; y++) {
+                    if (pontos[(y * largura + x) * 4 + 3] > 60) {
+                        if (topo[x] === null) topo[x] = y;
+                        base[x] = y;
+                    }
+                }
+            }
+            return { topo, base, altura };
+        }
+
+        function suavizar(valores, raio) {
+            return valores.map((_, i) => {
+                let soma = 0;
+                let peso = 0;
+                for (let d = -raio; d <= raio; d++) {
+                    const v = valores[i + d];
+                    if (v === undefined) continue;
+                    const p = 1 - Math.abs(d) / (raio + 1);
+                    soma += v * p;
+                    peso += p;
+                }
+                return soma / peso;
+            });
+        }
+
+        function corDoAr(i, proporcao, inicio, fim) {
+            const comprimento = fim - inicio;
+            const frente = Math.exp(-(((i - inicio) / (comprimento * 0.2)) ** 2));
+            const antes = i < inicio ? 1 : frente;
+            const esteira = i > fim ? Math.min(1, (i - fim) / (comprimento * 0.35)) : 0;
+            const proximidade = (1 - proporcao) ** 2;
+            const matiz = 188 - 118 * antes * proximidade + 34 * esteira;
+            return `hsl(${matiz}, 95%, ${62 - 8 * esteira}%)`;
+        }
+
+        function montarLinhas(contorno) {
+            const { topo, base, altura } = contorno;
+            const larguraTela = tela.width;
+            const alturaTela = tela.height;
+            const escalaX = larguraTela / AMOSTRAS;
+            const escalaY = alturaTela / altura;
+            const colunas = topo.map((v, i) => v === null ? -1 : i).filter((i) => i >= 0);
+            if (!colunas.length) return [];
+            const inicio = colunas[0];
+            const fim = colunas[colunas.length - 1];
+            const chao = Math.max(...base.filter((v) => v !== null));
+            const alturaCarro = chao - Math.min(...topo.filter((v) => v !== null));
+            const ceu = Math.max(altura * 0.1, chao - alturaCarro * 3.4);
+            const comprimento = fim - inicio;
+            const crua = topo.map((v) => v === null ? 0 : chao - v);
+            const alturaNariz = crua[inicio + Math.round(comprimento * 0.06)];
+            const alturaCauda = crua[fim - Math.round(comprimento * 0.04)];
+            const subida = comprimento * 0.45;
+            const descida = comprimento * 0.9;
+            const suave = (t) => t * t * (3 - 2 * t);
+            for (let i = 0; i < AMOSTRAS; i++) {
+                if (i < inicio) crua[i] = alturaNariz * suave(Math.max(0, 1 - (inicio - i) / subida));
+                if (i > fim) crua[i] = alturaCauda * suave(Math.max(0, 1 - (i - fim) / descida));
+            }
+            const lisa = suavizar(suavizar(crua, 20), 14).map((v, i) => Math.max(v, i >= inicio && i <= fim ? crua[i] * 0.97 : 0) + alturaCarro * 0.04);
+            const resultado = [];
+            const totalAcima = 30;
+
+            for (let k = 0; k < totalAcima; k++) {
+                const proporcao = ((k + 0.4) / totalAcima) ** 1.7;
+                const fase = Math.random() * 6.28;
+                const pontos = [];
+                for (let i = 0; i < AMOSTRAS; i++) {
+                    let y = chao - (lisa[i] + proporcao * (chao - ceu - lisa[i]));
+                    if (i > fim) y += Math.sin(i * 0.28 + fase) * (i - fim) * 0.05 * (1 - proporcao);
+                    pontos.push({ x: i * escalaX, y: y * escalaY, cor: corDoAr(i, proporcao, inicio, fim) });
+                }
+                resultado.push({ pontos, alfa: 0.5, fase: Math.random() });
+            }
+
+            for (let k = 0; k < 7; k++) {
+                const fracao = (k + 1) / 8;
+                const pontos = [];
+                for (let i = inicio; i <= fim; i++) {
+                    if (topo[i] === null) continue;
+                    const y = topo[i] + (base[i] - topo[i]) * fracao;
+                    pontos.push({ x: i * escalaX, y: y * escalaY, cor: corDoAr(i, 0.5, inicio, fim) });
+                }
+                resultado.push({ pontos: suavizarPontos(pontos), alfa: 0.28, fase: Math.random() });
+            }
+
+            for (let k = 0; k < 4; k++) {
+                const y = chao - alturaCarro * (0.015 + k * 0.03);
+                const pontos = [];
+                for (let i = 0; i < AMOSTRAS; i++) pontos.push({ x: i * escalaX, y: y * escalaY, cor: corDoAr(i, 0.05, inicio, fim) });
+                resultado.push({ pontos, alfa: 0.4, fase: Math.random() });
+            }
+
+            return resultado;
+        }
+
+        function suavizarPontos(pontos) {
+            const ys = suavizar(pontos.map((p) => p.y), 5);
+            return pontos.map((p, i) => ({ ...p, y: ys[i] }));
+        }
+
+        function traco(contexto, pontos, de, ate) {
+            for (let i = Math.max(de, 1); i < Math.min(ate, pontos.length); i++) {
+                contexto.strokeStyle = pontos[i].cor;
+                contexto.beginPath();
+                contexto.moveTo(pontos[i - 1].x, pontos[i - 1].y);
+                contexto.lineTo(pontos[i].x, pontos[i].y);
+                contexto.stroke();
+            }
+        }
+
+        function montarCamadaBase() {
+            camadaBase = document.createElement('canvas');
+            camadaBase.width = tela.width;
+            camadaBase.height = tela.height;
+            const contexto = camadaBase.getContext('2d');
+            contexto.globalCompositeOperation = 'lighter';
+            contexto.lineWidth = 1 * devicePixelRatio;
+            contexto.lineCap = 'round';
+            linhas.forEach((linha) => {
+                contexto.globalAlpha = linha.alfa;
+                traco(contexto, linha.pontos, 1, linha.pontos.length);
+            });
+        }
+
+        function animar(agora) {
+            pincel.clearRect(0, 0, tela.width, tela.height);
+            if (!inicioRevelar) inicioRevelar = agora;
+            revelado = reduzirMovimento ? 1 : Math.min(1, (agora - inicioRevelar) / 1400);
+            const larguraVisivel = tela.width * (1 - (1 - revelado) ** 3);
+            pincel.save();
+            pincel.beginPath();
+            pincel.rect(0, 0, larguraVisivel, tela.height);
+            pincel.clip();
+            pincel.drawImage(camadaBase, 0, 0);
+            if (!reduzirMovimento) {
+                pincel.globalCompositeOperation = 'lighter';
+                pincel.lineWidth = 1.8 * devicePixelRatio;
+                pincel.lineCap = 'round';
+                linhas.forEach((linha) => {
+                    for (let n = 0; n < 2; n++) {
+                        const posicao = ((agora / 2600 + linha.fase + n / 2) % 1) * linha.pontos.length;
+                        pincel.globalAlpha = Math.min(1, linha.alfa * 1.9);
+                        traco(pincel, linha.pontos, Math.floor(posicao) - 16, Math.floor(posicao));
+                    }
+                });
+            }
+            pincel.restore();
+            quadro = requestAnimationFrame(animar);
+        }
+
+        function limparFluxo() {
+            cancelAnimationFrame(quadro);
+            pincel.clearRect(0, 0, tela.width, tela.height);
+        }
+
+        async function desenharFluxo() {
+            limparFluxo();
+            const area = tela.getBoundingClientRect();
+            tela.width = Math.round(area.width * devicePixelRatio);
+            tela.height = Math.round(area.height * devicePixelRatio);
+            linhas = montarLinhas(await medirContorno());
+            montarCamadaBase();
+            inicioRevelar = 0;
+            quadro = requestAnimationFrame(animar);
+        }
+
+        async function alternarVento() {
+            ventoLigado = !ventoLigado;
+            botaoVento.setAttribute('aria-pressed', String(ventoLigado));
+            ventoTexto.textContent = ventoLigado ? 'Sair do túnel' : 'Túnel de vento';
+            document.body.classList.toggle('modo-vento', ventoLigado);
+            clearTimeout(inicioAutomatico);
+            if (ventoLigado) {
+                apresentar(false);
+                carro.removeAttribute('camera-controls');
+                await posicionarDeLado();
+                await desenharFluxo();
+            } else {
+                limparFluxo();
+                carro.setAttribute('camera-controls', '');
+                carro.cameraOrbit = '0deg 75deg 105%';
+                apresentar(!reduzirMovimento);
+            }
+        }
+
+        botaoVento.addEventListener('click', alternarVento);
+        botao.addEventListener('click', () => { if (ventoLigado) alternarVento(); });
+        window.addEventListener('resize', () => { if (ventoLigado) desenharFluxo(); });
 
         function quandoOcioso(acao) {
             if ('requestIdleCallback' in window) requestIdleCallback(acao);
