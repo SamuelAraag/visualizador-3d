@@ -437,6 +437,10 @@
 
         const pista = document.getElementById('pista');
         const ORBITA_INICIAL = '0deg 75deg 105%';
+        const INTRODUCAO = reduzirMovimento ? 0 : 2500;
+        const inicioIntroducao = performance.now();
+        let progressoReal = 0;
+        let chegou = false;
 
         if (!reduzirMovimento) {
             carro.setAttribute('max-camera-orbit', 'auto auto 320%');
@@ -444,10 +448,19 @@
         }
 
         function acompanharDownload(evento) {
-            const progresso = evento.detail.totalProgress;
+            progressoReal = evento.detail.totalProgress;
+        }
+
+        function desenharPista(agora) {
+            if (chegou) return;
+            const tempo = INTRODUCAO ? Math.min(1, (agora - inicioIntroducao) / INTRODUCAO) : 1;
+            const progresso = Math.min(progressoReal, tempo);
             pista.style.setProperty('--progresso', progresso);
             pista.setAttribute('aria-valuenow', String(Math.round(progresso * 100)));
+            requestAnimationFrame(desenharPista);
         }
+
+        requestAnimationFrame(desenharPista);
 
         function acenderCarro() {
             const inicio = performance.now();
@@ -461,7 +474,9 @@
         }
 
         function chegar() {
+            chegou = true;
             carro.removeEventListener('progress', acompanharDownload);
+            pista.style.setProperty('--progresso', 1);
             document.body.classList.replace('chegando', 'chegada');
             acenderCarro();
             if (!reduzirMovimento) {
@@ -476,13 +491,19 @@
         }
 
         carro.addEventListener('progress', acompanharDownload);
+        function chegarDepoisDaIntroducao() {
+            progressoReal = 1;
+            const resta = INTRODUCAO - (performance.now() - inicioIntroducao);
+            setTimeout(chegar, Math.max(0, resta) + (INTRODUCAO ? 250 : 0));
+        }
+
         carro.addEventListener('error', () => {
             carro.exposure = 1;
-            chegar();
+            chegarDepoisDaIntroducao();
         }, { once: true });
 
         carro.addEventListener('load', () => {
-            chegar();
+            chegarDepoisDaIntroducao();
             preCarregarCarros();
             if (reduzirMovimento) return;
             inicioAutomatico = setTimeout(() => apresentar(true), ESPERA_PARA_APRESENTAR);
