@@ -14,3 +14,8 @@ Créditos dos modelos
 - Escort XR3 1986: Ezo (https://sketchfab.com/3d-models/1986-ford-escort-xr3-69eb711566834234b5dfbde3c6d4ee0a), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 - Fusca: soujagah (https://sketchfab.com/3d-models/beetlefusca-version-1-cb6e82e73386448fb3b4e2dd25255a5e), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 - Camaro SS 1967: Ddiaz Design (https://sketchfab.com/3d-models/1967-chevrolet-camaro-ss-350-coupe-37ecedd9b5284cbfae74956eea2ad3fd), licença CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- Hennessey Blackbird: let's not care abt it (https://sketchfab.com/3d-models/hennessey-blackbird-1559fb3696d14ebfa21f516a3de40c07), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+- Hennessey Venom GT: amogusstrikesback2 (https://sketchfab.com/3d-models/hennessey-venom-gt-f0d07378280441ed96b5a6b363c27909), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+- Hennessey Exorcist Camaro ZL1: Ddiaz Design (https://sketchfab.com/3d-models/2018-hennessey-the-exorcist-camaro-zl1-a0d1b13a7e3a4fdd9eea0bbec25c52ab), licença CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- Camaro SS 1967 Hidden Jewel: Ddiaz Design (https://sketchfab.com/3d-models/1967-chevy-camaro-ss-hidden-jewel-2cd3999a0f0444e2a57b5f1aad92e890), licença CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
+- Impala 1967: amogusstrikesback2 (https://sketchfab.com/3d-models/1967-chevrolet-impala-464de4a3ab374c55b6400664806d693d), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).

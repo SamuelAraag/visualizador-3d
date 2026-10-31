@@ -202,9 +202,13 @@
                 animation: none;
             }
         }
+
+        body {
+            background: #15171b radial-gradient(ellipse 110% 75% at 50% 0%, #4a505a 0%, #2c3038 50%, #15171b 100%) fixed;
+        }
     </style>
 </head>
-<body style="background-color: black; margin: 0; font-family: 'azonix';">
+<body style="margin: 0; font-family: 'azonix';">
     <h1 style="width: 100%; color: white; text-align: center; position: absolute; top: 26%; font-size: 50px;">
         SAMUEL ARAAG
     </h1>
@@ -232,7 +236,7 @@
         </svg>
     </button>
 
-    <p id="nomeCarro" class="nome-carro" aria-live="polite">CORVETTE STINGRAY · 1/6</p>
+    <p id="nomeCarro" class="nome-carro" aria-live="polite">CORVETTE STINGRAY · 1/11</p>
 
     <button id="apresentacao" class="apresentacao" type="button" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -265,7 +269,12 @@
             { nome: 'Fiat 147', arquivo: './assets/source/fiat_147.glb', virado: true },
             { nome: 'Escort XR3 1986', arquivo: './assets/source/escort_xr3_1986.glb' },
             { nome: 'Fusca', arquivo: './assets/source/fusca_beetle.glb', virado: true },
-            { nome: 'Camaro SS 1967', arquivo: './assets/source/camaro_ss_1967.glb' }
+            { nome: 'Camaro SS 1967', arquivo: './assets/source/camaro_ss_1967.glb' },
+            { nome: 'Hennessey Blackbird', arquivo: './assets/source/hennessey_blackbird.glb' },
+            { nome: 'Hennessey Venom GT', arquivo: './assets/source/hennessey_venom_gt.glb' },
+            { nome: 'Hennessey Exorcist Camaro ZL1', arquivo: './assets/source/hennessey_exorcist_zl1.glb' },
+            { nome: 'Camaro SS 1967 Hidden Jewel', arquivo: './assets/source/camaro_ss_hidden_jewel.glb' },
+            { nome: 'Impala 1967', arquivo: './assets/source/impala_1967.glb' }
         ];
         const nomeCarro = document.getElementById('nomeCarro');
         const carregando = document.getElementById('carregando');
