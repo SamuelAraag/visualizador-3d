@@ -26,3 +26,4 @@ Créditos dos modelos
 - Hennessey Exorcist Camaro ZL1: Ddiaz Design (https://sketchfab.com/3d-models/2018-hennessey-the-exorcist-camaro-zl1-a0d1b13a7e3a4fdd9eea0bbec25c52ab), licença CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
 - Camaro SS 1967 Hidden Jewel: Ddiaz Design (https://sketchfab.com/3d-models/1967-chevy-camaro-ss-hidden-jewel-2cd3999a0f0444e2a57b5f1aad92e890), licença CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
 - Impala 1967: amogusstrikesback2 (https://sketchfab.com/3d-models/1967-chevrolet-impala-464de4a3ab374c55b6400664806d693d), licença CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+- Ferrari SF1000: OUTPISTON (https://sketchfab.com/3d-models/b41d5f1096664601ad1f511ca4cd138f), licença CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
