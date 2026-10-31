@@ -206,9 +206,99 @@
         body {
             background: #08090b radial-gradient(ellipse 110% 75% at 50% 0%, #4a505a 0%, #2c3038 42%, #08090b 100%) fixed;
         }
+
+        .palco {
+            position: relative;
+        }
+
+        .escuro {
+            position: fixed;
+            inset: 0;
+            background: #08090b;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1.4s ease 0.6s;
+        }
+
+        .pista {
+            position: absolute;
+            left: 50%;
+            top: calc(50% + 96px);
+            width: min(420px, 70vw);
+            height: 1px;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.06);
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .pista i {
+            display: block;
+            width: calc(var(--progresso, 0) * 100%);
+            height: 100%;
+            margin: 0 auto;
+            background: linear-gradient(90deg, transparent, #e8f1ff, transparent);
+            transition: width 0.2s linear;
+        }
+
+        body:not(.chegando) .pista {
+            opacity: 0;
+        }
+
+        body.chegando .escuro {
+            opacity: 1;
+            transition: none;
+        }
+
+        body.chegando h1 {
+            transform: translateY(calc(24vh - 50%));
+        }
+
+        body.chegada h1 {
+            transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        body.chegando model-viewer {
+            opacity: 0;
+        }
+
+        body.chegada model-viewer {
+            transition: opacity 0.8s ease 0.6s;
+        }
+
+        body.chegando .seta,
+        body.chegando .nome-carro,
+        body.chegando .apresentacao {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        body.chegada .nome-carro {
+            transition: opacity 0.6s ease 1.8s, visibility 0s 1.8s;
+        }
+
+        body.chegada .seta,
+        body.chegada .apresentacao {
+            transition: opacity 0.6s ease 1.95s, visibility 0s 1.95s;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .escuro,
+            body.chegada model-viewer,
+            body.chegada .nome-carro,
+            body.chegada .seta,
+            body.chegada .apresentacao {
+                transition: opacity 0.3s ease, visibility 0s;
+            }
+
+            body.chegando h1 {
+                transform: none;
+            }
+        }
     </style>
 </head>
-<body style="margin: 0; font-family: 'azonix';">
+<body class="chegando" style="margin: 0; font-family: 'azonix';">
+    <div class="escuro" aria-hidden="true"></div>
     <h1 style="width: 100%; color: white; text-align: center; position: absolute; top: 26%; font-size: 50px;">
         SAMUEL ARAAG
     </h1>
@@ -219,8 +309,10 @@
             src="./assets/source/corvette_stingray.glb"
             camera-controls
             auto-rotate-delay="0"
+            exposure="0"
             alt="Corvette Stingray">
         </model-viewer>
+        <div id="pista" class="pista" role="progressbar" aria-label="Carregando carro" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
     </div>
 
     <div id="carregando" class="carregando" hidden><span></span>Carregando carro</div>
@@ -324,6 +416,7 @@
         document.getElementById('anterior').addEventListener('click', () => trocar(-1));
         document.getElementById('proximo').addEventListener('click', () => trocar(1));
         document.addEventListener('keydown', (evento) => {
+            if (document.body.classList.contains('chegando')) return;
             if (evento.key === 'ArrowLeft') trocar(-1);
             if (evento.key === 'ArrowRight') trocar(1);
         });
@@ -363,7 +456,77 @@
             quandoOcioso(proximoDaFila);
         }
 
+        const pista = document.getElementById('pista');
+        const ORBITA_INICIAL = '0deg 75deg 105%';
+        const INTRODUCAO = reduzirMovimento ? 0 : 2500;
+        const inicioIntroducao = performance.now();
+        let progressoReal = 0;
+        let chegou = false;
+
+        if (!reduzirMovimento) {
+            carro.setAttribute('max-camera-orbit', 'auto auto 320%');
+            carro.setAttribute('camera-orbit', '-35deg 82deg 320%');
+        }
+
+        function acompanharDownload(evento) {
+            progressoReal = evento.detail.totalProgress;
+        }
+
+        function desenharPista(agora) {
+            if (chegou) return;
+            const tempo = INTRODUCAO ? Math.min(1, (agora - inicioIntroducao) / INTRODUCAO) : 1;
+            const progresso = Math.min(progressoReal, tempo);
+            pista.style.setProperty('--progresso', progresso);
+            pista.setAttribute('aria-valuenow', String(Math.round(progresso * 100)));
+            requestAnimationFrame(desenharPista);
+        }
+
+        requestAnimationFrame(desenharPista);
+
+        function acenderCarro() {
+            const inicio = performance.now();
+            const duracao = reduzirMovimento ? 300 : 1700;
+            const passo = (agora) => {
+                const t = Math.min(1, (agora - inicio) / duracao);
+                carro.exposure = 1 - (1 - t) ** 3;
+                if (t < 1) requestAnimationFrame(passo);
+            };
+            requestAnimationFrame(passo);
+        }
+
+        function chegar() {
+            chegou = true;
+            carro.removeEventListener('progress', acompanharDownload);
+            pista.style.setProperty('--progresso', 1);
+            document.body.classList.replace('chegando', 'chegada');
+            setTimeout(() => {
+                acenderCarro();
+                if (!reduzirMovimento) {
+                    carro.interpolationDecay = 260;
+                    carro.cameraOrbit = ORBITA_INICIAL;
+                }
+            }, reduzirMovimento ? 0 : 600);
+            setTimeout(() => {
+                document.body.classList.remove('chegada');
+                carro.removeAttribute('interpolation-decay');
+                carro.removeAttribute('max-camera-orbit');
+            }, 3000);
+        }
+
+        carro.addEventListener('progress', acompanharDownload);
+        function chegarDepoisDaIntroducao() {
+            progressoReal = 1;
+            const resta = INTRODUCAO - (performance.now() - inicioIntroducao);
+            setTimeout(chegar, Math.max(0, resta) + (INTRODUCAO ? 250 : 0));
+        }
+
+        carro.addEventListener('error', () => {
+            carro.exposure = 1;
+            chegarDepoisDaIntroducao();
+        }, { once: true });
+
         carro.addEventListener('load', () => {
+            chegarDepoisDaIntroducao();
             preCarregarCarros();
             if (reduzirMovimento) return;
             inicioAutomatico = setTimeout(() => apresentar(true), ESPERA_PARA_APRESENTAR);
