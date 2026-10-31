@@ -372,7 +372,32 @@
         const carregando = document.getElementById('carregando');
         const DURACAO_TROCA = reduzirMovimento ? 0 : 420;
         const ESPERA_CARREGANDO = 400;
+        const CHAVE_ULTIMO_CARRO = 'vz_ultimo_carro';
         let atual = 0;
+
+        function lerUltimoCarro() {
+            try {
+                return localStorage.getItem(CHAVE_ULTIMO_CARRO);
+            } catch {
+                return null;
+            }
+        }
+
+        function salvarUltimoCarro(carroAtual) {
+            try {
+                localStorage.setItem(CHAVE_ULTIMO_CARRO, carroAtual.arquivo);
+            } catch {}
+        }
+
+        const salvo = carros.findIndex((item) => item.arquivo === lerUltimoCarro());
+        if (salvo > 0) {
+            atual = salvo;
+            const inicial = carros[atual];
+            carro.setAttribute('src', inicial.arquivo);
+            carro.setAttribute('alt', inicial.nome);
+            if (inicial.virado) carro.setAttribute('orientation', '0deg 0deg 180deg');
+            nomeCarro.textContent = `${inicial.nome.toUpperCase()} · ${atual + 1}/${carros.length}`;
+        }
 
         let trocando = false;
 
@@ -404,6 +429,7 @@
                     carro.classList.remove('posicionando');
                     nomeCarro.textContent = `${destino.nome.toUpperCase()} · ${atual + 1}/${carros.length}`;
                     nomeCarro.classList.remove('trocando');
+                    salvarUltimoCarro(destino);
                     apresentar(apresentando);
                     setTimeout(() => { trocando = false; }, DURACAO_TROCA);
                 }, { once: true });
@@ -438,7 +464,7 @@
         }
 
         function preCarregarCarros() {
-            const fila = carros.slice(1);
+            const fila = carros.filter((_, indice) => indice !== atual);
 
             const proximoDaFila = () => {
                 const item = fila.shift();
