@@ -6,6 +6,13 @@ https://samuelaraag.github.io/visualizador-3d/
 <img src="https://raw.githubusercontent.com/SamuelAraag/visualizador-3d/main/assets/screenshot/Screenshot%202024-02-16%20at%2022.48.09.png"></img>
 <img src="https://raw.githubusercontent.com/SamuelAraag/visualizador-3d/main/assets/screenshot/Screenshot%202024-02-16%20at%2022.48.40.png"></img>
 
+
+Links úteis:
+https://sketchfab.com/amogusstrikesback2/collections/asphalt-series-6a8aca202b194b4fbe3d5617e1873fbf
+
+
+
+
 Créditos dos modelos
 
 - Corvette Stingray: modelo original do projeto.
