@@ -217,19 +217,19 @@
             background: #08090b;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 1.4s ease 0.3s;
+            transition: opacity 1.4s ease 0.6s;
         }
 
         .pista {
             position: absolute;
             left: 50%;
-            top: 68%;
+            top: calc(50% + 96px);
             width: min(420px, 70vw);
             height: 1px;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.06);
             pointer-events: none;
-            transition: opacity 0.4s ease 0.2s;
+            transition: opacity 0.3s ease;
         }
 
         .pista i {
@@ -250,6 +250,22 @@
             transition: none;
         }
 
+        body.chegando h1 {
+            transform: translateY(calc(24vh - 50%));
+        }
+
+        body.chegada h1 {
+            transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        body.chegando model-viewer {
+            opacity: 0;
+        }
+
+        body.chegada model-viewer {
+            transition: opacity 0.8s ease 0.6s;
+        }
+
         body.chegando .seta,
         body.chegando .nome-carro,
         body.chegando .apresentacao {
@@ -258,20 +274,25 @@
         }
 
         body.chegada .nome-carro {
-            transition: opacity 0.6s ease 1.3s, visibility 0s 1.3s;
+            transition: opacity 0.6s ease 1.8s, visibility 0s 1.8s;
         }
 
         body.chegada .seta,
         body.chegada .apresentacao {
-            transition: opacity 0.6s ease 1.45s, visibility 0s 1.45s;
+            transition: opacity 0.6s ease 1.95s, visibility 0s 1.95s;
         }
 
         @media (prefers-reduced-motion: reduce) {
             .escuro,
+            body.chegada model-viewer,
             body.chegada .nome-carro,
             body.chegada .seta,
             body.chegada .apresentacao {
                 transition: opacity 0.3s ease, visibility 0s;
+            }
+
+            body.chegando h1 {
+                transform: none;
             }
         }
     </style>
@@ -478,16 +499,18 @@
             carro.removeEventListener('progress', acompanharDownload);
             pista.style.setProperty('--progresso', 1);
             document.body.classList.replace('chegando', 'chegada');
-            acenderCarro();
-            if (!reduzirMovimento) {
-                carro.interpolationDecay = 260;
-                carro.cameraOrbit = ORBITA_INICIAL;
-            }
+            setTimeout(() => {
+                acenderCarro();
+                if (!reduzirMovimento) {
+                    carro.interpolationDecay = 260;
+                    carro.cameraOrbit = ORBITA_INICIAL;
+                }
+            }, reduzirMovimento ? 0 : 600);
             setTimeout(() => {
                 document.body.classList.remove('chegada');
                 carro.removeAttribute('interpolation-decay');
                 carro.removeAttribute('max-camera-orbit');
-            }, 2400);
+            }, 3000);
         }
 
         carro.addEventListener('progress', acompanharDownload);
